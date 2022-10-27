@@ -7,9 +7,11 @@ import org.junit.jupiter.api.extension.ExtensionContext.Store;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * An abstraction over JUnit5 Extension store providing methods to set commonly used resources.
@@ -48,6 +50,11 @@ class SunstoneStore {
         Store store = context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL);
         Set<String> checkSums = (Set<String>) store.getOrComputeIfAbsent(SUITE_LEVEL_DEPLOYMENTS, s -> new HashSet<String>());
         return checkSums.contains(checkSum);
+    }
+
+    void addSuiteLevelClosable(AutoCloseable closable) {
+        Store store = context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL);
+        store.put(UUID.randomUUID().toString(), (ExtensionContext.Store.CloseableResource) closable::close);
     }
     AzureResourceManager getAzureArmClient() {
         return getStore().get(AZURE_ARM_CLIENT, AzureResourceManager.class);
@@ -89,11 +96,14 @@ class SunstoneStore {
         getStore().put(AWS_CF_DEMPLOYMENT_MANAGER, o);
     }
 
-    void setClosables(Deque<AutoCloseable> closeables) {
-        getStore().put(CLOSABLES, closeables);
+    void initClosables() {
+        getStore().put(CLOSABLES, new ArrayDeque<>());
     }
 
     Deque<AutoCloseable> closables() {
         return getStore().get(CLOSABLES, Deque.class);
+    }
+    void addClosable(AutoCloseable closable) {
+        getStore().get(CLOSABLES, Deque.class).push(closable);
     }
 }

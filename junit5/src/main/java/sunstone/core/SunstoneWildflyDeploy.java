@@ -19,9 +19,7 @@ import sunstone.api.WildFlyDeployment;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
@@ -38,7 +36,7 @@ import static sunstone.core.SunstoneStore.StoreWrapper;
 
 /**
  * Purpose: handles archive deployment operation to WildFly server.
- *
+ * <p>
  * Used by {@link SunstoneExtension}. The class is also responsible for registering undeploy operation if possible.
  */
 class SunstoneWildflyDeploy {
@@ -88,7 +86,7 @@ class SunstoneWildflyDeploy {
                 } catch (CommandFailedException e) {
                     throw new RuntimeException(e);
                 }
-                store.closables().push(() -> {
+                store.addClosable(() -> {
                     client.apply(new Undeploy.Builder(deploymentName).build());
                     client.close();
                 });
@@ -100,7 +98,7 @@ class SunstoneWildflyDeploy {
                 WebApp azureWebApp = AzureUtils.findAzureWebApp(azureArmClient, resourceName, usedRG);
                 Exception ex = null;
                 for (int i = 0; i < 5; i++) {
-                    try{
+                    try {
                         LOGGER.debug("Deploying artifact to {} {}", resourceName, resourceType);
                         azureWebApp.warDeploy(tempFile.toFile());
                         ex = null;
@@ -110,7 +108,7 @@ class SunstoneWildflyDeploy {
                         e.printStackTrace();
                         ex = e;
                         // try another time
-                        Thread.sleep(10*1000);
+                        Thread.sleep(10 * 1000);
                     }
                 }
                 if (ex != null) {

@@ -18,13 +18,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 /**
  * Purpose: the class handles AWS CloudFormation template - deploy and undeploy the template to and from a stack.
- *
+ * <p>
  * Used by {@link SunstoneCloudDeploy}. Deploys to a stack with a random name (which is deleted as a whole later).
- *
+ * <p>
  * CloudFormation client credentials are taken from Sunstone.properties. See {@link AwsUtils}.
  */
 class AwsCloudFormationCloudDeploymentManager implements TemplateCloudDeploymentManager {
@@ -39,7 +38,7 @@ class AwsCloudFormationCloudDeploymentManager implements TemplateCloudDeployment
     }
 
     String deploy(String template, Map<String, String> parameters) {
-        String stackName = "SunstoneStack-" + UUID.randomUUID().toString().substring(0,5);
+        String stackName = "SunstoneStack-" + UUID.randomUUID().toString().substring(0, 5);
         CloudFormationWaiter waiter = cfClient.waiter();
 
         List<Parameter> cfParameters = new ArrayList<>();
@@ -58,7 +57,7 @@ class AwsCloudFormationCloudDeploymentManager implements TemplateCloudDeployment
                 .build();
 
         WaiterResponse<DescribeStacksResponse> waiterResponse = waiter.waitUntilStackCreateComplete(stacksRequest);
-        LOGGER.debug("Stack {} is ready {}",stackName, waiterResponse.matched().response().orElse(null));
+        LOGGER.debug("Stack {} is ready {}", stackName, waiterResponse.matched().response().orElse(null));
         return stackName;
     }
 
@@ -76,7 +75,7 @@ class AwsCloudFormationCloudDeploymentManager implements TemplateCloudDeployment
                 .build();
 
         WaiterResponse<DescribeStacksResponse> waiterResponse = waiter.waitUntilStackDeleteComplete(stacksRequest);
-        LOGGER.debug("Stack {} is deleted {}",id, waiterResponse.matched().response().orElse(null));
+        LOGGER.debug("Stack {} is deleted {}", id, waiterResponse.matched().response().orElse(null));
     }
 
     @Override

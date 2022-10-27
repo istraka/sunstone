@@ -13,14 +13,12 @@ import sunstone.api.Sunstone;
 import sunstone.api.WithAwsCfTemplate;
 import sunstone.api.WithAzureArmTemplate;
 
-import java.util.ArrayDeque;
-
 import static sunstone.core.SunstoneStore.StoreWrapper;
 
 /**
  * Extension handles {@link Sunstone} annotation, serves and orchestrate/delegate all the work,
  * initialize resources, ...
- *
+ * <p>
  * Uses {@link AutoCloseable} LIFO queue (a.k.a. Stack) for registering resources that needs to be cleaned/closed -
  * closing clients, cleaning Cloud resources, calling {@link AbstractSetupTask#cleanup()}, ... Class that creates
  * a resource that needs to be cleaned/closed is also responsible for registering it.
@@ -29,16 +27,16 @@ public class SunstoneExtension implements BeforeAllCallback, AfterAllCallback, T
 
     @Override
     public void beforeAll(ExtensionContext ctx) throws Exception {
-        StoreWrapper(ctx).setClosables(new ArrayDeque<>());
+        StoreWrapper(ctx).initClosables();
 
         if (ctx.getRequiredTestClass().getAnnotationsByType(WithAwsCfTemplate.class).length > 0) {
             CloudFormationClient cfClient = AwsUtils.getCloudFormationClient();
             StoreWrapper(ctx).setAwsCfClient(cfClient);
-            StoreWrapper(ctx).closables().push(cfClient);
+            StoreWrapper(ctx).addClosable(cfClient);
 
             Ec2Client ec2Client = AwsUtils.getEC2Client();
             StoreWrapper(ctx).setAwsEC2Client(ec2Client);
-            StoreWrapper(ctx).closables().push(ec2Client);
+            StoreWrapper(ctx).addClosable(ec2Client);
 
             SunstoneCloudDeploy.handleAwsCloudFormationAnnotations(ctx);
         }
@@ -64,7 +62,7 @@ public class SunstoneExtension implements BeforeAllCallback, AfterAllCallback, T
             // todo check number of parameters
             AbstractSetupTask abstractSetupTask = setupTask.getDeclaredConstructor().newInstance();
             SunstoneInject.injectInstanceResources(ctx, abstractSetupTask);
-            store.closables().push(abstractSetupTask::cleanup);
+            store.addClosable(abstractSetupTask::cleanup);
             abstractSetupTask.setup();
         }
     }

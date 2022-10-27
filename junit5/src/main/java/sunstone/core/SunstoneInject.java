@@ -59,14 +59,14 @@ class SunstoneInject {
         // inject EC2client
         if (Ec2Client.class.isAssignableFrom(field.getType())) {
             Ec2Client ec2Client = AwsUtils.getEC2Client();
-            StoreWrapper(ctx).closables().push(ec2Client);
+            StoreWrapper(ctx).addClosable(ec2Client);
             LOGGER.debug("Injecting {} into {}", ec2Client.getClass().getName(), field.getName());
             injected = ec2Client;
         }
         // inject S3Client
         else if (S3Client.class.isAssignableFrom(field.getType())) {
             S3Client s3Client = AwsUtils.getS3Client();
-            StoreWrapper(ctx).closables().push(s3Client);
+            StoreWrapper(ctx).addClosable(s3Client);
             LOGGER.debug("Injecting {} into {}", s3Client.getClass().getName(), field.getName());
             injected = s3Client;
         }
@@ -115,7 +115,7 @@ class SunstoneInject {
         else if (OnlineManagementClient.class.isAssignableFrom(field.getType())) {
             OnlineManagementClient managementClient = CreaperUtils.getManagementClient(ctx, named, hint);
             LOGGER.debug("Injecting {} into {}", managementClient.getClass().getName(), field.getName());
-            StoreWrapper(ctx).closables().push(managementClient);
+            StoreWrapper(ctx).addClosable(managementClient);
             injected = managementClient;
         } else {
             throw new RuntimeException("Unable to determine what should be injected into field of type: " + field.getType().getSimpleName());
